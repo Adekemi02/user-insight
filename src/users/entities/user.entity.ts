@@ -13,10 +13,10 @@ export class User extends BaseEntity {
     email: string;
 
     @Column()
-    friendsCount: string;
+    friendsCount: number;
 
     @Column()
-    accountId: string;
+    facebookId: string;
 
     @Column()
     photoUrl: string;

@@ -8,11 +8,11 @@ import { UserRepository } from "src/users/repositories/users..repository";
 
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, "facebook") {
-    constructor(private readonly userRepository: UserRepository) {
+    constructor() {
         super({
             clientID: process.env.FACEBOOK_CLIENT_ID,
             clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-            callbackURL: "http://localhost:3000/facebook/redirect",
+            callbackURL: "http://localhost:3000/api/v1/auth/callback",
             scope: "email",
             profileFields: ['name', 'email'],
         });
@@ -21,23 +21,27 @@ export class FacebookStrategy extends PassportStrategy(Strategy, "facebook") {
     async validate(
         accessToken: string,
         refreshToken: string,
-        profile: Profile,
-        done: (err: any, user: any, info?: any) => void
-    ): Promise<any> {
-        const { name, emails } = profile;
-
+        profile: any,
+        done: Function,
+      ): Promise<any> {
+        const profileJson = profile._json;
+        const id = profileJson.id;
+        const firstName = profileJson.first_name || profileJson.name?.givenName || '';
+        const lastName = profileJson.last_name || profileJson.name?.familyName || '';
+        const email = profileJson.email || '';
+        const friendsCount = profileJson.friends?.summary?.total_count || 0;
+        const pictureUrl = profileJson.picture?.data?.url || '';
+    
         const user = {
-            email: emails[0].value,
-            firstName: name.givenName,
-            lastName: name.familyName,
+          facebookId: id,
+          name: `${firstName} ${lastName}`,
+          email: email,
+          friendsCount: friendsCount,
+          photoUrl: pictureUrl,
+          accessToken,
         };
-
-        const payload = {
-            user,
-            accessToken,
-        };
-
-        done(null, payload);
+       
+        done(null, user);
 
     }
 }
